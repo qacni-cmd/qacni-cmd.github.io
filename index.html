@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>โปรแกรมตรวจสอบ Dimension - CNI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Sarabun', sans-serif; background-color: #f8fafc; }
+        .card { background: white; border-radius: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+    </style>
+</head>
+<body class="p-4 md:p-10 text-slate-800">
+    <div class="max-w-3xl mx-auto card border border-slate-200 overflow-hidden">
+        <!-- Header -->
+        <div class="bg-white border-b border-slate-100 p-8 text-center">
+            <img src="https://lh3.googleusercontent.com/d/1ArexUnAcNbWFbHc9vKebapDejkKCt6uV" alt="CNI Logo" class="h-16 mx-auto mb-4">
+            <p class="text-xs font-bold text-indigo-600 uppercase tracking-widest">WI-QA-008</p>
+            <h1 class="text-xl font-bold text-slate-800 mt-1">การชักสิ่งตัวอย่างและกฎการสับเปลี่ยน</h1>
+        </div>
+        
+        <div class="p-8 space-y-8">
+            <!-- Form -->
+            <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">ขนาดลอต (Lot Size)</label>
+                        <input type="number" id="lotSize" class="w-full border-0 ring-1 ring-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="เช่น 5001">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">ระดับความเข้มงวด</label>
+                        <select id="inspLevel" class="w-full border-0 ring-1 ring-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <option value="I">ทั่วไป I</option> <option value="II" selected>ทั่วไป II</option> <option value="III">ทั่วไป III</option>
+                        </select>
+                    </div>
+                </div>
+                <button onclick="calculate()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-lg transition active:scale-[0.98]">คำนวณผลการตรวจสอบ</button>
+            </div>
+
+            <!-- Result -->
+            <div id="result" class="hidden bg-indigo-50 p-6 rounded-2xl text-center border border-indigo-100">
+                <div class="grid grid-cols-3 gap-2">
+                    <div><p class="text-[10px] text-indigo-400 font-bold uppercase">รหัสอักษร</p><p id="outCode" class="text-3xl font-black text-indigo-900">-</p></div>
+                    <div><p class="text-[10px] text-indigo-400 font-bold uppercase">ขนาดตัวอย่าง</p><p id="outSample" class="text-3xl font-black text-indigo-900">-</p></div>
+                    <div><p class="text-[10px] text-indigo-400 font-bold uppercase">Ac / Re</p><p id="outAcRe" class="text-3xl font-black text-indigo-900">-</p></div>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div>
+                <h2 class="text-sm font-bold text-slate-700 mb-3 uppercase tracking-wider">อ้างอิงตารางมาตรฐาน (MIL-STD-105E)</h2>
+                <div class="overflow-hidden rounded-xl border border-slate-200">
+                    <table class="w-full text-xs text-left">
+                        <thead class="bg-slate-100">
+                            <tr><th class="p-3">ขนาดจำนวนของ Lot</th><th class="p-3">จำนวนตัวอย่าง</th><th class="p-3">Ac.</th><th class="p-3">Re.</th></tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr><td class="p-3">5 - 10,000 ชิ้น</td><td class="p-3">5</td><td class="p-3">0</td><td class="p-3">1</td></tr>
+                            <tr><td class="p-3">10,001 - 20,000 ชิ้น</td><td class="p-3">7</td><td class="p-3">0</td><td class="p-3">1</td></tr>
+                            <tr><td class="p-3">20,001 ชิ้น ขึ้นไป</td><td class="p-3">10</td><td class="p-3">0</td><td class="p-3">1</td></tr>
+                            <tr><td class="p-3">Mat'l Coil < 5 Coil</td><td class="p-3">100%</td><td class="p-3">0</td><td class="p-3">1</td></tr>
+                            <tr><td class="p-3">Mat'l Coil > 5 Coil</td><td class="p-3">5 Coil</td><td class="p-3">0</td><td class="p-3">1</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Definitions -->
+            <div class="bg-white border border-slate-200 p-6 rounded-2xl">
+                <h3 class="font-bold text-slate-800 mb-3 border-b pb-2 uppercase text-xs">คำจำกัดความมาตรฐาน</h3>
+                <ul class="text-slate-600 text-xs space-y-2 leading-relaxed">
+                    <li>• <strong>การชักสิ่งตัวอย่าง:</strong> การตรวจสอบหน่วยผลิตภัณฑ์ที่เลือกมาจากลอตด้วยวิธีการทางสถิติ</li>
+                    <li>• <strong>ลอต หรือ แบช:</strong> ปริมาณของผลิตภัณฑ์ที่รวบรวมไว้เพื่อทำการตรวจสอบ</li>
+                    <li>• <strong>AQL:</strong> ระดับคุณภาพที่เป็นค่าเฉลี่ยความบกพร่องที่ยอมรับได้ในการสุ่มตรวจ</li>
+                    <li>• <strong>AC/RE:</strong> จำนวนที่ยอมรับได้ (Accept) และจำนวนที่ปฏิเสธ (Reject)</li>
+                </ul>
+            </div>
+        </div>
+        <div class="p-4 text-center text-[10px] text-slate-400 border-t border-slate-100 bg-slate-50">© C.N.I. Engineering Supply Co., Ltd. | WI-QA-008</div>
+    </div>
+
+    <script>
+        function calculate() {
+            const lot = parseInt(document.getElementById('lotSize').value);
+            const level = document.getElementById('inspLevel').value;
+            if (!lot || lot <= 0) { return; }
+
+            const table = [
+                [2, 8, "A", "A", "A", "A", "A", "A", "B"], [9, 15, "A", "A", "A", "A", "A", "B", "C"],
+                [16, 25, "A", "A", "B", "B", "B", "C", "D"], [26, 50, "A", "B", "B", "C", "C", "D", "E"],
+                [51, 90, "B", "B", "C", "C", "C", "E", "F"], [91, 150, "B", "B", "C", "D", "D", "F", "G"],
+                [151, 280, "B", "C", "D", "E", "E", "G", "H"], [281, 500, "B", "C", "D", "E", "F", "H", "J"],
+                [501, 1200, "C", "C", "E", "F", "G", "J", "K"], [1201, 3200, "C", "D", "E", "G", "H", "K", "L"],
+                [3201, 10000, "C", "D", "F", "G", "J", "L", "M"], [10001, 35000, "C", "D", "F", "H", "K", "M", "N"],
+                [35001, 150000, "D", "E", "G", "J", "L", "N", "P"], [150001, 500000, "D", "E", "G", "J", "M", "P", "Q"],
+                [500001, 99999999, "D", "E", "H", "K", "N", "Q", "R"]
+            ];
+
+            const indexMap = { "I": 6, "II": 7, "III": 8 };
+            let code = "-";
+            for (let row of table) { if (lot >= row[0] && lot <= row[1]) { code = row[indexMap[level]]; break; } }
+
+            const baseData = {
+                "A": { n: 2, ac: 0, re: 1 }, "B": { n: 3, ac: 0, re: 1 }, "C": { n: 5, ac: 0, re: 1 },
+                "D": { n: 8, ac: 0, re: 1 }, "E": { n: 13, ac: 0, re: 1 }, "F": { n: 20, ac: 0, re: 1 },
+                "G": { n: 32, ac: 0, re: 1 }, "H": { n: 50, ac: 0, re: 1 }, "J": { n: 80, ac: 0, re: 1 },
+                "K": { n: 125, ac: 1, re: 2 }, "L": { n: 200, ac: 1, re: 2 }, "M": { n: 315, ac: 3, re: 4 },
+                "N": { n: 500, ac: 5, re: 6 }, "P": { n: 800, ac: 7, re: 8 }, "Q": { n: 1250, ac: 10, re: 11 },
+                "R": { n: 2000, ac: 14, re: 15 }
+            };
+
+            let finalData = (level === 'I') ? {
+                "A": { n: 2, ac: 0, re: 1 }, "B": { n: 2, ac: 0, re: 1 }, "C": { n: 2, ac: 0, re: 1 },
+                "D": { n: 3, ac: 0, re: 1 }, "E": { n: 5, ac: 0, re: 1 }, "F": { n: 8, ac: 0, re: 1 },
+                "G": { n: 13, ac: 0, re: 1 }, "H": { n: 20, ac: 0, re: 1 }, "J": { n: 32, ac: 0, re: 1 },
+                "K": { n: 50, ac: 1, re: 2 }, "L": { n: 80, ac: 1, re: 2 }, "M": { n: 125, ac: 3, re: 4 },
+                "N": { n: 200, ac: 5, re: 6 }, "P": { n: 315, ac: 7, re: 8 }, "Q": { n: 500, ac: 10, re: 11 },
+                "R": { n: 800, ac: 14, re: 15 }
+            } : baseData;
+
+            document.getElementById('outCode').innerText = code;
+            document.getElementById('outSample').innerText = finalData[code] ? finalData[code].n : "-";
+            document.getElementById('outAcRe').innerText = finalData[code] ? `${finalData[code].ac} / ${finalData[code].re}` : "-";
+            document.getElementById('result').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
